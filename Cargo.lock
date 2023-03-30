@@ -12,28 +12,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "calltuple"
-version = "0.1.0"
-
-[[package]]
-name = "client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "serde",
- "server",
-]
-
-[[package]]
 name = "example"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "calltuple",
- "client",
  "macros",
+ "rpcclient",
+ "rpcserver",
  "serde",
- "server",
+ "tuplecaller",
 ]
 
 [[package]]
@@ -70,6 +57,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpcclient"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "rpcserver",
+ "serde",
+]
+
+[[package]]
+name = "rpcserver"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "lazy_static",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.159"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -90,14 +94,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "lazy_static",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -107,6 +103,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "tuplecaller"
+version = "0.1.0"
 
 [[package]]
 name = "unicode-ident"

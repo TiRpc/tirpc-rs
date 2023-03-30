@@ -23,12 +23,12 @@ pub fn rpcfunc(_args: TokenStream, input: TokenStream) -> TokenStream {
     let outp = item.sig.output;
 
     if types.len() == 1 {
-        let first = types.get(0).unwrap().clone();
+        let arg = types.get(0).unwrap().clone();
         return quote! {
             #vis fn #ident(data: Vec<u8>) -> Vec<u8> {
                 assert!(data.len() > 0);
 
-                let src = bincode::deserialize::<(#first, )>(&data).unwrap();
+                let src = bincode::deserialize::<(#arg,)>(&data).unwrap();
                 pub fn of(#args) #outp{
                     #block
                 }

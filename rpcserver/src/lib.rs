@@ -1,9 +1,11 @@
 use bincode;
 use lazy_static::lazy_static;
-use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Write};
-use std::net::TcpListener;
-use std::sync::Mutex;
+use std::{
+    collections::HashMap,
+    io::{BufRead, BufReader, Write},
+    net::TcpListener,
+    sync::Mutex,
+};
 
 // TODO: remove all `unwrap`
 
@@ -23,14 +25,14 @@ pub fn register(fname: String, f: fn(Vec<u8>) -> Vec<u8>) {
 pub fn run(addr: &str) {
     let listener = TcpListener::bind(addr).unwrap();
     for stream in listener.incoming() {
-        let mut ts = stream.unwrap();
+        let mut ste = stream.unwrap();
         let mut req = vec![];
-        let mut br = BufReader::new(&mut ts);
+        let mut br = BufReader::new(&mut ste);
         br.read_until(PACKETDELIMITER, &mut req).unwrap();
 
         let resp = handle_call(req);
-        ts.write(&resp).unwrap();
-        ts.write(&['\n' as u8]).unwrap();
+        ste.write(&resp).unwrap();
+        ste.write(&[PACKETDELIMITER]).unwrap();
     }
 }
 

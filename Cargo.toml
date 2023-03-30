@@ -1,2 +1,2 @@
 [workspace]
-members = ["client", "macros", "server", "example", "calltuple"]
+members = ["rpcclient", "macros", "rpcserver", "example", "tuplecaller"]
