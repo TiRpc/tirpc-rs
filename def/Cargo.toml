@@ -1,6 +1,5 @@
-
 [package]
-name = "tuplecaller"
+name = "def"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,3 +8,5 @@ edition = "2021"
 
 
 [dependencies]
+thiserror = "1.0.40"
+bincode = "1.3.3"

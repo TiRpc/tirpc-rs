@@ -1,5 +1,6 @@
 use bincode;
-use rpcserver;
+
+use def::{self, TiRpcError};
 use std::{
     io::{BufRead, BufReader, Write},
     net::TcpStream,
@@ -13,16 +14,15 @@ impl RpcClient {
     pub fn new(addr: String) -> Self {
         Self { addr }
     }
-    pub fn sendrpc(&self, req: Vec<u8>) -> Vec<u8> {
-        let mut conn = TcpStream::connect(&self.addr).unwrap();
-        conn.write(&req).unwrap();
-        conn.write(&[rpcserver::PACKETDELIMITER]).unwrap();
-        conn.flush().unwrap();
+    pub fn sendrpc(&self, req: Vec<u8>) -> Result<Vec<u8>, def::TiRpcError> {
+        let mut conn = TcpStream::connect(&self.addr)?;
+        conn.write(&req)?;
+        conn.write(&[def::PACKETDELIMITER])?;
+        conn.flush()?;
         let mut resp = vec![];
         let mut br = BufReader::new(&mut conn);
-        br.read_until(rpcserver::PACKETDELIMITER, &mut resp)
-            .unwrap();
-        return resp;
+        br.read_until(def::PACKETDELIMITER, &mut resp)?;
+        return Ok(resp);
     }
 }
 
@@ -34,9 +34,9 @@ macro_rules! callrpc {
     (fname $f:expr, client $cli: expr, $($params:expr),+) => {{
         let mut data = callrpc!($($params),+);
         let mut fb = bincode::serialize(&$f).unwrap();
-        fb.push(rpcserver::FUNCTIONDELIMITER);
+        fb.push(def::FUNCTIONDELIMITER);
         fb.append(&mut data);
-        $cli.sendrpc(fb)
+        $cli.sendrpc(fb).unwrap()
     }};
     ($param:expr, $($params:expr),+) =>{{
         let mut data = callrpc!($param);
@@ -46,6 +46,6 @@ macro_rules! callrpc {
     }}
 }
 
-pub fn deserialize<'a, T: serde::de::Deserialize<'a>>(data: &'a Vec<u8>) -> T {
-    bincode::deserialize::<T>(data).unwrap()
+pub fn deserialize<'a, T: serde::de::Deserialize<'a>>(data: &'a Vec<u8>) -> Result<T, TiRpcError> {
+    Ok(bincode::deserialize::<T>(data)?)
 }

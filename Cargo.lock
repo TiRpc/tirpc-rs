@@ -12,15 +12,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "def"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "thiserror",
+]
+
+[[package]]
 name = "example"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "def",
  "macros",
  "rpcclient",
  "rpcserver",
  "serde",
- "tuplecaller",
 ]
 
 [[package]]
@@ -61,7 +69,7 @@ name = "rpcclient"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "rpcserver",
+ "def",
  "serde",
 ]
 
@@ -70,6 +78,7 @@ name = "rpcserver"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "def",
  "lazy_static",
 ]
 
@@ -105,8 +114,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "tuplecaller"
-version = "0.1.0"
+name = "thiserror"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978c9a314bd8dc99be594bc3c175faaa9794be04a5a5e153caba6915336cebac"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "unicode-ident"

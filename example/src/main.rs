@@ -3,7 +3,8 @@ use macros::rpcfunc;
 use rpcclient::{self, callrpc};
 use serde::{Deserialize, Serialize};
 use std::{thread, time::Duration};
-use tuplecaller::TupleCaller;
+use rpcserver::TupleCaller;
+use def::TiRpcError;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Person {
@@ -27,15 +28,15 @@ pub fn who(p: Person) -> Vec<u8> {
 }
 
 fn main() {
-    rpcserver::register("add".into(), add);
-    rpcserver::register("who".into(), who);
+    rpcserver::register("add".into(), add).unwrap();
+    rpcserver::register("who".into(), who).unwrap();
 
     let addr = "127.0.0.1:5003".to_string();
     let cli = rpcclient::RpcClient::new(addr.clone());
     thread::spawn(move || rpcserver::run(&addr));
     thread::sleep(Duration::from_millis(500));
     let bsum = callrpc!(fname "add".to_string(), client &cli, 1, 2);
-    let sum: i32 = rpcclient::deserialize(&bsum);
+    let sum: i32 = rpcclient::deserialize(&bsum).unwrap();
 
     println!("got sum: {}", sum);
 
@@ -45,6 +46,6 @@ fn main() {
         score: vec![1, 2, 3],
     };
     let bscore = callrpc!(fname "who", client &cli, p);
-    let score: Vec<u8> = rpcclient::deserialize(&bscore);
+    let score: Vec<u8> = rpcclient::deserialize(&bscore).unwrap();
     println!("got score: {:?}", score);
 }

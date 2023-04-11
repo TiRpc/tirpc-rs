@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn};
 
+
 #[proc_macro_attribute]
 pub fn rpcfunc(_args: TokenStream, input: TokenStream) -> TokenStream {
     let item = parse_macro_input!(input as ItemFn);
@@ -25,28 +26,28 @@ pub fn rpcfunc(_args: TokenStream, input: TokenStream) -> TokenStream {
     if types.len() == 1 {
         let arg = types.get(0).unwrap().clone();
         return quote! {
-            #vis fn #ident(data: Vec<u8>) -> Vec<u8> {
+            #vis fn #ident(data: Vec<u8>) -> Result<Vec<u8>, TiRpcError> {
                 assert!(data.len() > 0);
 
-                let src = bincode::deserialize::<(#arg,)>(&data).unwrap();
+                let src = bincode::deserialize::<(#arg,)>(&data)?;
                 pub fn of(#args) #outp{
                     #block
                 }
                 let re = of.call_tuple(src);
-                bincode::serialize(&re).unwrap()
+                Ok(bincode::serialize(&re)?)
             }
         }
         .into();
     } else {
         return quote! {
-            #vis fn #ident(data: Vec<u8>) -> Vec<u8> {
+            #vis fn #ident(data: Vec<u8>) -> Result<Vec<u8>, TiRpcError> {
                 assert!(data.len() > 0);
-                let src = bincode::deserialize::<(#(#types),*)>(&data).unwrap();
+                let src = bincode::deserialize::<(#(#types),*)>(&data)?;
                 pub fn of(#args) #outp{
                     #block
                 }
                 let re = of.call_tuple(src);
-                bincode::serialize(&re).unwrap()
+                Ok(bincode::serialize(&re)?)
             }
         }
         .into();
