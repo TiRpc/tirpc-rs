@@ -1,5 +1,5 @@
-use thiserror::Error;
 use std::io;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum TiRpcError {
@@ -14,7 +14,6 @@ pub enum TiRpcError {
 
     #[error("method not found")]
     MethodNotFound,
-
 
     #[error("unknown error")]
     Unknown,

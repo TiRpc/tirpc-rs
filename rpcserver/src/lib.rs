@@ -1,7 +1,7 @@
 pub mod tuplecaller;
 
-use def::{self, TiRpcError};
 use bincode;
+use def::{self, TiRpcError};
 use lazy_static::lazy_static;
 use std::{
     collections::HashMap,
@@ -11,33 +11,52 @@ use std::{
 };
 pub use tuplecaller::TupleCaller;
 
-// TODO: remove all `unwrap`
-
-
 lazy_static! {
     static ref FUNCTIONS: Mutex<HashMap<String, Box<fn(Vec<u8>) -> Result<Vec<u8>, TiRpcError>>>> =
         Mutex::new(HashMap::new());
 }
 
-pub fn register(fname: String, f: fn(Vec<u8>) -> Result<Vec<u8>, TiRpcError>) ->Result<(), TiRpcError> {
-    let mut guard = FUNCTIONS.lock()
-                        .map_err(|e|TiRpcError::MutexError(e.to_string()))?;
+pub fn register(
+    fname: String,
+    f: fn(Vec<u8>) -> Result<Vec<u8>, TiRpcError>,
+) -> Result<(), TiRpcError> {
+    let mut guard = FUNCTIONS
+        .lock()
+        .map_err(|e| TiRpcError::MutexError(e.to_string()))?;
     guard.insert(fname, Box::new(f));
     Ok(())
 }
 
-pub fn run(addr: &str) {
-    let listener = TcpListener::bind(addr).unwrap();
+pub fn run<F: Fn(TiRpcError)>(addr: &str, callback: F) -> Result<(), TiRpcError> {
+    let listener = TcpListener::bind(addr)?;
     for stream in listener.incoming() {
-        let mut ste = stream.unwrap();
+        let rste = stream.map_err(|e| callback(TiRpcError::TcpStreamError(e)));
+        if !rste.is_ok() {
+            continue;
+        }
+        let mut ste = rste.unwrap();
         let mut req = vec![];
         let mut br = BufReader::new(&mut ste);
-        br.read_until(def::PACKETDELIMITER, &mut req).unwrap();
+        if let Err(e) = br.read_until(def::PACKETDELIMITER, &mut req) {
+            callback(TiRpcError::TcpStreamError(e));
+            continue;
+        }
 
-        let resp = handle_call(req).unwrap();
-        ste.write(&resp).unwrap();
-        ste.write(&[def::PACKETDELIMITER]).unwrap();
+        match handle_call(req) {
+            Ok(resp) => {
+                if let Err(e) = ste.write(&resp) {
+                    callback(TiRpcError::TcpStreamError(e));
+                    continue;
+                };
+                if let Err(e) = ste.write(&[def::PACKETDELIMITER]) {
+                    callback(TiRpcError::TcpStreamError(e));
+                    continue;
+                };
+            }
+            Err(e) => callback(e),
+        };
     }
+    Ok(())
 }
 
 fn handle_call(req: Vec<u8>) -> Result<Vec<u8>, TiRpcError> {
@@ -50,7 +69,9 @@ fn handle_call(req: Vec<u8>) -> Result<Vec<u8>, TiRpcError> {
     }
     let fname: String = bincode::deserialize(&req[..idx])?;
     let req = req[(idx + 1)..].to_vec();
-    let guard = FUNCTIONS.lock().map_err(|e|TiRpcError::MutexError(e.to_string()))?;
+    let guard = FUNCTIONS
+        .lock()
+        .map_err(|e| TiRpcError::MutexError(e.to_string()))?;
     let f = guard.get(&fname).ok_or(TiRpcError::MethodNotFound)?;
     return f(req);
 }

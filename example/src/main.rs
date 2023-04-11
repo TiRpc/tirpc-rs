@@ -1,10 +1,10 @@
 use bincode;
+use def::TiRpcError;
 use macros::rpcfunc;
 use rpcclient::{self, callrpc};
+use rpcserver::TupleCaller;
 use serde::{Deserialize, Serialize};
 use std::{thread, time::Duration};
-use rpcserver::TupleCaller;
-use def::TiRpcError;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Person {
@@ -33,9 +33,9 @@ fn main() {
 
     let addr = "127.0.0.1:5003".to_string();
     let cli = rpcclient::RpcClient::new(addr.clone());
-    thread::spawn(move || rpcserver::run(&addr));
+    thread::spawn(move || rpcserver::run(&addr, |e| println!("{}", e.to_string())).unwrap());
     thread::sleep(Duration::from_millis(500));
-    let bsum = callrpc!(fname "add".to_string(), client &cli, 1, 2);
+    let bsum = callrpc!(fname "add".to_string(), client &cli, 1, 2).unwrap();
     let sum: i32 = rpcclient::deserialize(&bsum).unwrap();
 
     println!("got sum: {}", sum);
@@ -45,7 +45,7 @@ fn main() {
         name: "Jack".into(),
         score: vec![1, 2, 3],
     };
-    let bscore = callrpc!(fname "who", client &cli, p);
+    let bscore = callrpc!(fname "who", client &cli, p).unwrap();
     let score: Vec<u8> = rpcclient::deserialize(&bscore).unwrap();
     println!("got score: {:?}", score);
 }
